@@ -28,11 +28,10 @@ public class ExportConfiguration {
 	/**
 	 * List of objects to be written.
 	 */
-	@SuppressWarnings("rawtypes")
-	private List data;
+	private List<Object> data;
 
 	@SuppressWarnings("rawtypes")
-	public ExportConfiguration(Class type, List result, FieldToColumnMapping[] mappings, String excelName) {
+	public ExportConfiguration(Class type, List<Object> result, FieldToColumnMapping[] mappings, String excelName) {
 		this.type = type;
 		this.data = result;
 		this.mappings = mappings;
@@ -47,13 +46,11 @@ public class ExportConfiguration {
 		this.excelName = excelName;
 	}
 
-	@SuppressWarnings("rawtypes")
-	public List getData() {
+	public List<Object> getData() {
 		return data;
 	}
 
-	@SuppressWarnings("rawtypes")
-	public void setData(List data) {
+	public void setData(List<Object> data) {
 		this.data = data;
 	}
 
