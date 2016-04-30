@@ -7,6 +7,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Date;
 import java.util.List;
 
 import org.apache.commons.io.IOUtils;
@@ -78,7 +79,10 @@ public class ExcelExporter {
 			for( i=0; i < mappingsCount; i++ ) {
 				Cell cell = row.createCell( i );
 				
-				Method method = getGetterMethod(configuration, mappings[i].getField());
+				String field = mappings[i].getField();
+				
+				LOGGER.debug( "In ExcelExport | export | Trying to fetch method for " + field );
+				Method method = getGetterMethod(configuration, field);
 				
 				try {		
 					Object result = method.invoke( t );
@@ -88,7 +92,14 @@ public class ExcelExporter {
 					}
 					if( result instanceof Long ) {
 						cell.setCellValue( (Long) result );
-					} else {
+					} 
+					else if( result instanceof Boolean ) {
+						cell.setCellValue( (Boolean) result );
+					}
+					else if( result instanceof Date ) {
+						cell.setCellValue( (Date) result );
+					}
+					else {
 						cell.setCellValue( (String) result );
 					}
 					
@@ -151,6 +162,18 @@ public class ExcelExporter {
 			}
 		}
 		
+		LOGGER.error( "In ExcelExport | export | No suitable getter found for " + field );
+		LOGGER.info( "In ExcelExport | export | Having another go considering " + field + " a boolean variable " );
+		getterName = convertToGetterForBoolean( field );
+		
+		for( Method method : allMethods ) {
+			if( method.getName().equals( getterName )) {
+				return method;
+			}
+		}
+		
+		LOGGER.error( "In ExcelExport | export | No suitable getter found for " + field + " | Returning Null." );
+		
 		return null;
 	}
 	
@@ -161,5 +184,12 @@ public class ExcelExporter {
 	 */
 	private static String convertToGetter( String field ) {
 		return "get" + String.valueOf( field.charAt( FIRST_ROW )).toUpperCase() + field.substring(1);
+	}
+	
+	/**
+	 * Utility method to compute getter string for a boolean variable.
+	 */
+	private static String convertToGetterForBoolean( String field ) {
+		return "is" + String.valueOf( field.charAt( FIRST_ROW )).toUpperCase() + field.substring(1);
 	}
 }
