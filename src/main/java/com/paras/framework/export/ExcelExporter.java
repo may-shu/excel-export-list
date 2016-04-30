@@ -7,6 +7,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
@@ -17,6 +18,8 @@ import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFCell;
+
 import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.security.crypto.codec.Base64;
@@ -34,6 +37,17 @@ public class ExcelExporter {
 	private static Logger LOGGER = Logger.getLogger( ExcelExporter.class );
 	
 	private static final int FIRST_ROW = 0;
+	
+	private static final SimpleDateFormat dateFormat = new SimpleDateFormat("MMM dd, yyyy");
+	private static final SimpleDateFormat hourFormat = new SimpleDateFormat( "hh:mm:ss" );
+	private static final SimpleDateFormat dateAndHourFormat = new SimpleDateFormat( "MMM dd, yyyy hh:mm" );
+	
+	/**
+	 * Utility method to check to see if date has time part.
+	 */
+	private boolean hasTimePart( Date date ) {
+		return hourFormat.format( date ).equals("00:00:00");
+	}
 
 	/**
 	 * In this method we will try to create a temporary file.
@@ -60,12 +74,13 @@ public class ExcelExporter {
 		XSSFColor headerColor = new XSSFColor( new Color( 155, 194, 230 ));
 		CellStyle headerStyle = workbook.createCellStyle();
 		
-		headerStyle.setFillBackgroundColor( headerColor.getIndex() );
+		headerStyle.setFillForegroundColor( headerColor.getIndex() );
 		
 		for( i=0; i < mappingsCount; i++ ) {
 			Cell cell = header.createCell( i );
-			cell.setCellStyle( headerStyle );
+			
 			cell.setCellValue( mappings[i].getColumn() );
+			cell.setCellStyle( headerStyle );
 		}
 		
 		/* Writing Values */
@@ -97,7 +112,20 @@ public class ExcelExporter {
 						cell.setCellValue( (Boolean) result );
 					}
 					else if( result instanceof Date ) {
-						cell.setCellValue( (Date) result );
+						
+						cell.setCellType( XSSFCell.CELL_TYPE_NUMERIC );
+						
+						Date value = (Date) result;
+						SimpleDateFormat format = null;
+						
+						if( hasTimePart( value )) {
+							format = dateAndHourFormat;
+						} else {
+							format = dateFormat;
+						}
+						
+						cell.setCellValue( format.format( value ));						
+						
 					}
 					else {
 						cell.setCellValue( (String) result );
